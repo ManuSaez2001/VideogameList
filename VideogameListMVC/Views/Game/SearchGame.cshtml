@@ -1,0 +1,268 @@
+@{
+	ViewData["Title"] = "Buscar Videojuegos";
+}
+
+<div class="container mt-5">
+	<div class="row justify-content-center">
+		<div class="col-md-8">
+			<div class="card shadow">
+				<div class="card-body">
+					<h1 class="card-title mb-4">
+						<i class="bi bi-search"></i> Buscar Videojuegos
+					</h1>
+
+					<!-- Barra de búsqueda con autocompletado -->
+					<div class="mb-3">
+						<div class="input-group">
+							<input 
+								type="text" 
+								id="searchInput" 
+								class="form-control form-control-lg" 
+								placeholder="Escribe el nombre de un juego (mínimo 2 caracteres)..." 
+								autocomplete="off">
+							<button class="btn btn-primary btn-lg" type="button" id="searchBtn" disabled>
+								<i class="bi bi-search"></i> Buscar
+							</button>
+						</div>
+					</div>
+
+					<!-- Dropdown con sugerencias -->
+					<div id="suggestionsContainer" class="mb-3" style="display: none;">
+						<div class="list-group" id="suggestionsList"></div>
+					</div>
+
+					<!-- Mensaje de carga -->
+					<div id="loadingSpinner" class="spinner-border text-primary" role="status" style="display: none;">
+						<span class="visually-hidden">Cargando...</span>
+					</div>
+
+					<!-- Mensaje de error -->
+					<div id="errorAlert" class="alert alert-danger alert-dismissible fade" role="alert" style="display: none;">
+						<strong>Error:</strong> <span id="errorMessage"></span>
+						<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+					</div>
+
+					<!-- Resultado seleccionado -->
+					<div id="selectedGameContainer" style="display: none;">
+						<hr>
+						<h4>Juego Seleccionado:</h4>
+						<div class="card">
+							<div class="card-body">
+								<h5 class="card-title" id="selectedGameName"></h5>
+								<p class="card-text">
+									<small class="text-muted">ID: <span id="selectedGameId"></span></small>
+								</p>
+								<button class="btn btn-info btn-sm" id="viewDetailsBtn" disabled>
+									Ver Detalles
+								</button>
+								<button class="btn btn-secondary btn-sm" id="clearSelectionBtn">
+									Buscar Otro
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script>
+		const searchInput = document.getElementById('searchInput');
+		const searchBtn = document.getElementById('searchBtn');
+		const suggestionsContainer = document.getElementById('suggestionsContainer');
+		const suggestionsList = document.getElementById('suggestionsList');
+		const loadingSpinner = document.getElementById('loadingSpinner');
+		const errorAlert = document.getElementById('errorAlert');
+		const errorMessage = document.getElementById('errorMessage');
+		const selectedGameContainer = document.getElementById('selectedGameContainer');
+		const selectedGameName = document.getElementById('selectedGameName');
+		const selectedGameId = document.getElementById('selectedGameId');
+		const viewDetailsBtn = document.getElementById('viewDetailsBtn');
+		const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+
+		let debounceTimer;
+		let selectedGame = null;
+
+		// Event listener para búsqueda con debounce
+		searchInput.addEventListener('input', function () {
+			clearTimeout(debounceTimer);
+			const term = this.value.trim();
+
+			// Habilitar botón de búsqueda solo si hay texto
+			searchBtn.disabled = term.length < 2;
+
+			if (term.length < 2) {
+				suggestionsContainer.style.display = 'none';
+				suggestionsList.innerHTML = '';
+				errorAlert.style.display = 'none';
+				return;
+			}
+
+			// Debounce: esperar 300ms después de que el usuario deje de escribir
+			debounceTimer = setTimeout(() => {
+				fetchSuggestions(term);
+			}, 300);
+		});
+
+		// Event listener para presionar Enter
+		searchInput.addEventListener('keypress', function (e) {
+			if (e.key === 'Enter' && !searchBtn.disabled) {
+				searchBtn.click();
+			}
+		});
+
+		// Event listener para botón de búsqueda
+		searchBtn.addEventListener('click', function () {
+			const term = searchInput.value.trim();
+			if (term.length >= 2 && selectedGame) {
+				// Redirigir al detalle del juego seleccionado
+				window.location.href = `/Game/GameDetail/${selectedGame.id}`;
+			}
+		});
+
+		// Limpiar selección
+		clearSelectionBtn.addEventListener('click', function () {
+			searchInput.value = '';
+			selectedGame = null;
+			selectedGameContainer.style.display = 'none';
+			suggestionsContainer.style.display = 'none';
+			suggestionsList.innerHTML = '';
+			searchInput.focus();
+		});
+
+		// Ver detalles
+		viewDetailsBtn.addEventListener('click', function () {
+			if (selectedGame) {
+				window.location.href = `/Game/GameDetail/${selectedGame.id}`;
+			}
+		});
+
+		// Función para obtener sugerencias via AJAX
+		async function fetchSuggestions(term) {
+			loadingSpinner.style.display = 'inline-block';
+			errorAlert.style.display = 'none';
+			suggestionsContainer.style.display = 'none';
+
+			try {
+				const response = await fetch(`/Game/SearchGameSuggestions?term=${encodeURIComponent(term)}`);
+
+				if (!response.ok) {
+					throw new Error(`Error HTTP: ${response.status}`);
+				}
+
+				const games = await response.json();
+				loadingSpinner.style.display = 'none';
+
+				if (games.length === 0) {
+					suggestionsList.innerHTML = '<div class="list-group-item text-muted">No se encontraron resultados</div>';
+				} else {
+					// Crear elementos del dropdown - Ordenados por rating (popularidad)
+					suggestionsList.innerHTML = games.map((game, index) => `
+						<button type="button" class="list-group-item list-group-item-action suggestion-item" onclick="selectGame(${game.id}, '${escapeHtml(game.name)}', '${game.coverUrl || ''}')">
+							<div class="d-flex align-items-center gap-3">
+								${game.coverUrl ? `<img src="${game.coverUrl}" alt="${escapeHtml(game.name)}" class="game-cover-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22%3E%3Crect fill=%22%23ccc%22 width=%2250%22 height=%2250%22/%3E%3C/svg%3E'">` : '<div class="game-cover-placeholder">📦</div>'}
+								<div class="flex-grow-1">
+									<div class="game-name">${escapeHtml(game.name)}</div>
+									${game.rating ? `<span class="badge bg-warning text-dark">⭐ ${(game.rating / 10).toFixed(1)}/10</span>` : '<span class="badge bg-secondary">Sin rating</span>'}
+								</div>
+							</div>
+						</button>
+					`).join('');
+				}
+
+				suggestionsContainer.style.display = 'block';
+			}
+			catch (error) {
+				loadingSpinner.style.display = 'none';
+				errorMessage.textContent = error.message || 'Error al conectar con el servidor';
+				errorAlert.style.display = 'block';
+			}
+		}
+
+		// Función para seleccionar un juego del dropdown
+		function selectGame(id, name, coverUrl) {
+			selectedGame = { id, name, coverUrl };
+			selectedGameName.textContent = name;
+			selectedGameId.textContent = id;
+			selectedGameContainer.style.display = 'block';
+			suggestionsContainer.style.display = 'none';
+			searchInput.value = name;
+			viewDetailsBtn.disabled = false;
+		}
+
+		// Función para escapar HTML y evitar XSS
+		function escapeHtml(text) {
+			const map = {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#039;'
+			};
+			return text.replace(/[&<>"']/g, m => map[m]);
+		}
+
+		// Focus en el input al cargar la página
+		searchInput.focus();
+	</script>
+}
+
+<style>
+	.list-group-item-action {
+		transition: all 0.2s ease-in-out;
+	}
+
+	.list-group-item-action:hover {
+		background-color: #f8f9fa;
+		transform: translateX(5px);
+	}
+
+	.suggestion-item {
+		padding: 0.75rem !important;
+	}
+
+	.game-cover-thumbnail {
+		width: 50px;
+		height: 70px;
+		object-fit: cover;
+		border-radius: 0.375rem;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+		flex-shrink: 0;
+	}
+
+	.game-cover-placeholder {
+		width: 50px;
+		height: 70px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: #e9ecef;
+		border-radius: 0.375rem;
+		font-size: 1.5rem;
+		flex-shrink: 0;
+	}
+
+	.game-name {
+		font-weight: 500;
+		color: #212529;
+		margin-bottom: 0.25rem;
+	}
+
+	.card {
+		border-radius: 0.5rem;
+	}
+
+	#suggestionsContainer {
+		max-height: 400px;
+		overflow-y: auto;
+		position: absolute;
+		width: 100%;
+		z-index: 1000;
+	}
+
+	.input-group {
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+</style>

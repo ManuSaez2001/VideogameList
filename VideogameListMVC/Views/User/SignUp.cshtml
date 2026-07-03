@@ -1,0 +1,96 @@
+@model VideogameListMVC.Models.UserRegisterViewModel
+
+@{
+	ViewData["Title"] = "SignUp";
+}
+
+<h1>Sign Up</h1>
+
+<h4>Create a new account</h4>
+<hr />
+<div class="row">
+	<div class="col-md-4">
+		<form asp-action="SignUp">
+			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+			<div class="form-group">
+				<label asp-for="UserName" class="control-label"></label>
+				<input asp-for="UserName" class="form-control" />
+				<span asp-validation-for="UserName" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Name" class="control-label"></label>
+				<input asp-for="Name" class="form-control" />
+				<span asp-validation-for="Name" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="DateOfBirth" class="control-label"></label>
+				<input asp-for="DateOfBirth" type="date" class="form-control" />
+				<span asp-validation-for="DateOfBirth" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Mail" class="control-label"></label>
+				<input asp-for="Mail" class="form-control" />
+				<span asp-validation-for="Mail" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Password" class="control-label"></label>
+				<div class="input-group">
+					<input asp-for="Password" type="password" class="form-control" id="passwordInput" />
+					<button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn" onclick="togglePasswordVisibility('passwordInput', 'togglePasswordBtn')">
+						<i class="fas fa-eye"></i>
+					</button>
+				</div>
+				<span asp-validation-for="Password" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label for="confirmPassword" class="control-label">Confirm Password</label>
+				<div class="input-group">
+					<input type="password" class="form-control" id="confirmPasswordInput" name="confirmPassword" />
+					<button class="btn btn-outline-secondary" type="button" id="toggleConfirmPasswordBtn" onclick="togglePasswordVisibility('confirmPasswordInput', 'toggleConfirmPasswordBtn')">
+						<i class="fas fa-eye"></i>
+					</button>
+				</div>
+				<span id="passwordMismatch" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<input type="submit" value="Sign Up" class="btn btn-primary" onclick="return validatePasswordMatch()" />
+			</div>
+		</form>
+	</div>
+</div>
+
+<div>
+	<a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+	@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+	<script>
+		function togglePasswordVisibility(inputId, btnId) {
+			const input = document.getElementById(inputId);
+			const btn = document.getElementById(btnId);
+
+			if (input.type === 'password') {
+				input.type = 'text';
+				btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+			} else {
+				input.type = 'password';
+				btn.innerHTML = '<i class="fas fa-eye"></i>';
+			}
+		}
+
+		function validatePasswordMatch() {
+			const password = document.getElementById('passwordInput').value;
+			const confirmPassword = document.getElementById('confirmPasswordInput').value;
+			const mismatchSpan = document.getElementById('passwordMismatch');
+
+			if (password !== confirmPassword) {
+				mismatchSpan.textContent = 'Passwords do not match';
+				return false;
+			}
+
+			mismatchSpan.textContent = '';
+			return true;
+		}
+	</script>
+}
