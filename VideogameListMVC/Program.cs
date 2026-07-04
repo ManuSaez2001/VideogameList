@@ -3,6 +3,7 @@ using LogicaAplicacion.InterfacesCasosUso;
 using LogicaDatos.Repositories;
 using LogicaIntegracion;
 using LogicaIntegracion.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using WebAPI.Token;
@@ -38,6 +39,13 @@ builder.Services.AddScoped<ICURegister, CURegister>();
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtOptions>>().Value);
 
+// Agregar autenticación con cookies (JWT validado por middleware)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options => {
+        options.LoginPath = "/User/Login";
+        options.LogoutPath = "/User/Logout";
+    });
+
 string strCon = builder.Configuration.GetConnectionString("LocalDB");
 builder.Services.AddDbContext<VGListContext>(options => 
     options.UseSqlServer(strCon));
@@ -46,9 +54,6 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 app.UseSession();
-
-// Registrar el middleware de validación JWT
-app.UseMiddleware<JwtValidationMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {
@@ -61,6 +66,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Registrar el middleware de validación JWT ANTES de autenticación
+// Esto establece el usuario basándose en el token JWT
+app.UseMiddleware<JwtValidationMiddleware>();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

@@ -1,7 +1,9 @@
 ﻿using LogicaAplicacion.InterfacesCasosUso;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace VideogameListMVC.Controllers {
+    [Authorize(Roles ="NormalUser")]
     public class GameController : Controller {
         private readonly ILogger _logger;
         private readonly ICUSearchGames _cuSearchGames;

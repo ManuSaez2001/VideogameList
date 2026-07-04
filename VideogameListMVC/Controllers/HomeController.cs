@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Polly;
 using System.Diagnostics;
 using VideogameListMVC.Models;
 
@@ -11,6 +13,11 @@ namespace VideogameListMVC.Controllers {
         }
 
         public IActionResult Index() {
+            return View();
+        }
+
+        [Authorize]
+        public IActionResult UserIndex() {
             return View();
         }
 
