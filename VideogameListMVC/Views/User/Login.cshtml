@@ -8,7 +8,8 @@
 <hr />
 <div class="row">
 	<div class="col-md-4">
-		<form asp-action="Login" method="post">
+		<form asp-action="Login" method="post" onsubmit="disableSubmitButton(this)">
+			@Html.AntiForgeryToken()
 			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 			<div class="form-group">
 				<label for="mail" class="control-label">Email</label>
@@ -26,7 +27,7 @@
 				<span id="passwordError" class="text-danger"></span>
 			</div>
 			<div class="form-group">
-				<input type="submit" value="Login" class="btn btn-primary" />
+				<input type="submit" value="Login" class="btn btn-primary" id="loginBtn" />
 			</div>
 		</form>
 	</div>
@@ -53,6 +54,13 @@
 				input.type = 'password';
 				btn.innerHTML = '<i class="fas fa-eye"></i>';
 			}
+		}
+
+		function disableSubmitButton(form) {
+			const submitBtn = form.querySelector('input[type="submit"]');
+			submitBtn.disabled = true;
+			submitBtn.value = 'Procesando...';
+			return true;
 		}
 	</script>
 }

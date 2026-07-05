@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace LogicaAplicacion.InterfacesCasosUso {
-    public interface ICULogin {
-        Task<DTOUserLogged> LoginAsync(DTOUserLogin userDTO);
+    public interface ICUCreateGameList {
+        Task CreateGameListAsync(DTOGameList gameListDTO);
     }
 }

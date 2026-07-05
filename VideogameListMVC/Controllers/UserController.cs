@@ -42,12 +42,12 @@ namespace VideogameListMVC.Controllers {
         // POST: UserController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult SignUp(DTOUserRegister dto) {
+        public async Task<ActionResult> SignUp(DTOUserRegister dto) {
             try {
                 if(dto == null) {
                     return View();
                 }
-                cURegister.Register(dto);
+                await cURegister.RegisterAsync(dto);
                 return RedirectToAction(nameof(Login));
             } catch {
                 return View();
@@ -73,13 +73,13 @@ namespace VideogameListMVC.Controllers {
         // POST: UserController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Login(DTOUserLogin dto) {
+        public async Task<ActionResult> Login(DTOUserLogin dto) {
             try {
                 if (dto == null) {
                     ModelState.AddModelError("", "El formulario de login no es válido");
                     return View();
                 }
-                DTOUserLogged dtoLogged = cULogin.Login(dto);
+                DTOUserLogged dtoLogged = await cULogin.LoginAsync(dto);
                 string nuevoJwt = ManejadorToken.CrearToken(dtoLogged, jwtOptions);
                 Response.Cookies.Append("JWTToken", nuevoJwt, new CookieOptions {
                     HttpOnly = true,

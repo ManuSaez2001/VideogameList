@@ -10,7 +10,8 @@
 <hr />
 <div class="row">
 	<div class="col-md-4">
-		<form asp-action="SignUp">
+		<form asp-action="SignUp" onsubmit="return validateAndDisable(this)">
+			@Html.AntiForgeryToken()
 			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 			<div class="form-group">
 				<label asp-for="UserName" class="control-label"></label>
@@ -53,7 +54,7 @@
 				<span id="passwordMismatch" class="text-danger"></span>
 			</div>
 			<div class="form-group">
-				<input type="submit" value="Sign Up" class="btn btn-primary" onclick="return validatePasswordMatch()" />
+				<input type="submit" value="Sign Up" class="btn btn-primary" id="signupBtn" />
 			</div>
 		</form>
 	</div>
@@ -90,6 +91,14 @@
 			}
 
 			mismatchSpan.textContent = '';
+			return true;
+		}
+
+		function validateAndDisable(form) {
+			if (!validatePasswordMatch()) return false;
+			const submitBtn = form.querySelector('input[type="submit"]');
+			submitBtn.disabled = true;
+			submitBtn.value = 'Registrando...';
 			return true;
 		}
 	</script>

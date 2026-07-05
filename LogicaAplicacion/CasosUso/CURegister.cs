@@ -15,11 +15,11 @@ namespace LogicaAplicacion.CasosUso {
             RepoUser = repoUser;
         }
 
-        public void Register(DTOUserRegister userDTO) {
+        public async Task RegisterAsync(DTOUserRegister userDTO) {
             User user = UserMapper.ToUserFromRegister(userDTO);
             //user.IsValid();
             user.Password = Security.HashearPasswordPBKDF2(userDTO.Password);
-            RepoUser.Add(user);
+            await RepoUser.AddAsync(user);
         }
     }
 }

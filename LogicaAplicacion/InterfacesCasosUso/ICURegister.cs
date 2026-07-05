@@ -9,6 +9,6 @@ using System.Threading.Tasks;
 
 namespace LogicaAplicacion.InterfacesCasosUso {
     public interface ICURegister {
-        void Register(DTOUserRegister userDTO);
+        Task RegisterAsync(DTOUserRegister userDTO);
     }
 }

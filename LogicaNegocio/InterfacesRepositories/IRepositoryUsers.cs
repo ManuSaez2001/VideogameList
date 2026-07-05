@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace LogicaNegocio.InterfacesRepositories {
     public interface IRepositoryUsers {
-        void Add(User user);
-        User Login(string mail);
-        User FindById(int id);
-        void Remove(int id);
-        void Update(User updatedUser);
-        List<User> FindAll(int ammount);
-        List<User> FindSuggestions(string partialQuery, int ammount);
+        Task AddAsync(User user);
+        Task<User> GetByMailAsync(string mail);
+        Task<User> FindByIdAsync(int id);
+        Task RemoveAsync(int id);
+        Task UpdateAsync(User updatedUser);
+        Task<List<User>> FindAllAsync(int ammount);
+        Task<List<User>> FindSuggestionsAsync(string partialQuery, int ammount);
     }
 }

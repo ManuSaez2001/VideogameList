@@ -7,6 +7,6 @@ using System.Threading.Tasks;
 
 namespace LogicaNegocio.InterfacesRepositories {
     public interface IRepositoryGameLists {
-        void Add(GameList gl);
+        Task AddAsync(GameList gl);
     }
 }

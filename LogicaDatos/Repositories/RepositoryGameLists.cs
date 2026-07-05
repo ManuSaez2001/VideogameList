@@ -10,9 +10,9 @@ namespace LogicaDatos.Repositories {
     public class RepositoryGameLists : IRepositoryGameLists {
         public VGListContext Context { get; set; }
         public RepositoryGameLists(VGListContext context) { Context = context; }
-        public void Add(GameList gameList) {
+        public async Task AddAsync(GameList gameList) {
             Context.GameLists.Add(gameList);
-            Context.SaveChanges();
+            await Context.SaveChangesAsync();
         }
     }
 }
